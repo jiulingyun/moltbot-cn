@@ -30,7 +30,7 @@ function formatSummary(summary: { critical: number; warn: number; info: number }
 export function registerSecurityCli(program: Command) {
   const security = program
     .command("security")
-    .description("Security tools (audit)")
+    .description("安全工具（审计）")
     .addHelpText(
       "after",
       () =>

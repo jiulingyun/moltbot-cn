@@ -33,7 +33,7 @@ export async function installChromeExtension(opts?: {
 }): Promise<{ path: string }> {
   const src = opts?.sourceDir ?? bundledExtensionRootDir();
   if (!hasManifest(src)) {
-    throw new Error("Bundled Chrome extension is missing. Reinstall Clawdbot and try again.");
+    throw new Error("捆绑的 Chrome 扩展缺失。请重新安装 Clawdbot 并重试。");
   }
 
   const stateDir = opts?.stateDir ?? STATE_DIR_CLAWDBOT;
@@ -49,7 +49,7 @@ export async function installChromeExtension(opts?: {
 
   await fs.promises.cp(src, dest, { recursive: true });
   if (!hasManifest(dest)) {
-    throw new Error("Chrome extension install failed (manifest.json missing). Try again.");
+    throw new Error("Chrome 扩展安装失败（manifest.json 缺失）。请重试。");
   }
 
   return { path: dest };
@@ -84,11 +84,11 @@ export function registerBrowserExtensionCommands(
       defaultRuntime.error(
         info(
           [
-            copied ? "Copied to clipboard." : "Copy to clipboard unavailable.",
-            "Next:",
-            `- Chrome → chrome://extensions → enable “Developer mode”`,
-            `- “Load unpacked” → select: ${displayPath}`,
-            `- Pin “Clawdbot Browser Relay”, then click it on the tab (badge shows ON)`,
+            copied ? "已复制到剪贴板。" : "复制到剪贴板不可用。",
+            "接下来：",
+            `- Chrome → chrome://extensions → 启用“开发者模式"`,
+            `- “加载已解压的扩展程序” → 选择：${displayPath}`,
+            `- 固定“Clawdbot Browser Relay”，然后在标签页上点击它（徽章显示 ON）`,
             "",
             `${theme.muted("Docs:")} ${formatDocsLink("/tools/chrome-extension", "docs.clawd.bot/tools/chrome-extension")}`,
           ].join("\n"),
@@ -106,7 +106,7 @@ export function registerBrowserExtensionCommands(
         defaultRuntime.error(
           danger(
             [
-              `Chrome extension is not installed. Run: "${formatCliCommand("clawdbot browser extension install")}"`,
+              `Chrome 扩展未安装。运行："${formatCliCommand("clawdbot browser extension install")}"`,
               `Docs: ${formatDocsLink("/tools/chrome-extension", "docs.clawd.bot/tools/chrome-extension")}`,
             ].join("\n"),
           ),
@@ -120,6 +120,6 @@ export function registerBrowserExtensionCommands(
       const displayPath = shortenHomePath(dir);
       defaultRuntime.log(displayPath);
       const copied = await copyToClipboard(dir).catch(() => false);
-      if (copied) defaultRuntime.error(info("Copied to clipboard."));
+      if (copied) defaultRuntime.error(info("已复制到剪贴板。"));
     });
 }

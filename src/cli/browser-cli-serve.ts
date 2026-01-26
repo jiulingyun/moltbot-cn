@@ -27,19 +27,14 @@ export function registerBrowserServeCommands(
   browser
     .command("serve")
     .description("运行独立的浏览器控制服务器（用于远程网关）")
-    .option("--bind <host>", "Bind host (default: 127.0.0.1)")
-    .option("--port <port>", "Bind port (default: from browser.controlUrl)")
-    .option(
-      "--token <token>",
-      "Require Authorization: Bearer <token> (required when binding non-loopback)",
-    )
+    .option("--bind <host>", "绑定主机（默认：127.0.0.1）")
+    .option("--port <port>", "绑定端口（默认：来自 browser.controlUrl）")
+    .option("--token <token>", "需要授权：Bearer <token>（绑定非环回地址时必需）")
     .action(async (opts: { bind?: string; port?: string; token?: string }) => {
       const cfg = loadConfig();
       const resolved = resolveBrowserConfig(cfg.browser);
       if (!resolved.enabled) {
-        defaultRuntime.error(
-          danger("Browser control is disabled. Set browser.enabled=true and try again."),
-        );
+        defaultRuntime.error(danger("浏览器控制已禁用。请设置 browser.enabled=true 并重试。"));
         defaultRuntime.exit(1);
       }
 
@@ -51,7 +46,7 @@ export function registerBrowserServeCommands(
       if (!isLoopbackBindHost(host) && !authToken) {
         defaultRuntime.error(
           danger(
-            `Refusing to bind browser control on ${host} without --token (or CLAWDBOT_BROWSER_CONTROL_TOKEN, or browser.controlToken).`,
+            `拒绝在 ${host} 上绑定浏览器控制，缺少 --token（或 CLAWDBOT_BROWSER_CONTROL_TOKEN，或 browser.controlToken）。`,
           ),
         );
         defaultRuntime.exit(1);
@@ -71,7 +66,7 @@ export function registerBrowserServeCommands(
         if (!profile || profile.driver !== "extension") continue;
         await ensureChromeExtensionRelayServer({ cdpUrl: profile.cdpUrl }).catch((err) => {
           defaultRuntime.error(
-            danger(`Chrome extension relay init failed for profile "${name}": ${String(err)}`),
+            danger(`配置文件 "${name}" 的 Chrome 扩展中继初始化失败：${String(err)}`),
           );
         });
       }
@@ -80,9 +75,9 @@ export function registerBrowserServeCommands(
         info(
           [
             `🦞 Browser control listening on ${bridge.baseUrl}/`,
-            authToken ? "Auth: Bearer token required." : "Auth: off (loopback only).",
+            authToken ? "认证：需要 Bearer 令牌。" : "认证：关闭（仅限环回）。",
             "",
-            "Paste on the Gateway (clawdbot.json):",
+            "粘贴到网关（clawdbot.json）：",
             JSON.stringify(
               {
                 browser: {
@@ -97,7 +92,7 @@ export function registerBrowserServeCommands(
             ...(authToken
               ? [
                   "",
-                  "Or use env on the Gateway (instead of controlToken in config):",
+                  "或在网关上使用环境变量（代替配置中的 controlToken）：",
                   `export CLAWDBOT_BROWSER_CONTROL_TOKEN=${JSON.stringify(authToken)}`,
                 ]
               : []),
@@ -109,7 +104,7 @@ export function registerBrowserServeCommands(
       const shutdown = async (signal: string) => {
         if (shuttingDown) return;
         shuttingDown = true;
-        defaultRuntime.log(info(`Shutting down (${signal})...`));
+        defaultRuntime.log(info(`正在关闭 (${signal})...`));
         await stopBrowserBridgeServer(bridge.server).catch(() => {});
         process.exit(0);
       };

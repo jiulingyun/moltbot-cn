@@ -31,7 +31,7 @@ export function registerWebhooksCli(program: Command) {
         `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/webhooks", "docs.clawd.bot/cli/webhooks")}\n`,
     );
 
-  const gmail = webhooks.command("gmail").description("Gmail Pub/Sub hooks (via gogcli)");
+  const gmail = webhooks.command("gmail").description("Gmail Pub/Sub 钩子（通过 gogcli）");
 
   gmail
     .command("setup")

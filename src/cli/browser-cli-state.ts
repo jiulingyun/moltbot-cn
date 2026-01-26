@@ -37,13 +37,13 @@ export function registerBrowserStateCommands(
 ) {
   registerBrowserCookiesAndStorageCommands(browser, parentOpts);
 
-  const set = browser.command("set").description("Browser environment settings");
+  const set = browser.command("set").description("浏览器环境设置");
 
   set
     .command("viewport")
-    .description("Set viewport size (alias for resize)")
-    .argument("<width>", "Viewport width", (v: string) => Number(v))
-    .argument("<height>", "Viewport height", (v: string) => Number(v))
+    .description("设置视口大小（resize 的别名）")
+    .argument("<width>", "视口宽度", (v: string) => Number(v))
+    .argument("<height>", "视口高度", (v: string) => Number(v))
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (width: number, height: number, opts, cmd) => {
       const parent = parentOpts(cmd);
@@ -75,7 +75,7 @@ export function registerBrowserStateCommands(
 
   set
     .command("offline")
-    .description("Toggle offline mode")
+    .description("切换离线模式")
     .argument("<on|off>", "on/off")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (value: string, opts, cmd) => {
@@ -84,7 +84,7 @@ export function registerBrowserStateCommands(
       const profile = parent?.browserProfile;
       const offline = parseOnOff(value);
       if (offline === null) {
-        defaultRuntime.error(danger("Expected on|off"));
+        defaultRuntime.error(danger("期望 on|off"));
         defaultRuntime.exit(1);
         return;
       }
@@ -104,7 +104,7 @@ export function registerBrowserStateCommands(
 
   set
     .command("headers")
-    .description("Set extra HTTP headers (JSON object)")
+    .description("设置额外的 HTTP 头（JSON 对象）")
     .requiredOption("--json <json>", "JSON object of headers")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (opts, cmd) => {
@@ -135,10 +135,10 @@ export function registerBrowserStateCommands(
 
   set
     .command("credentials")
-    .description("Set HTTP basic auth credentials")
-    .option("--clear", "Clear credentials", false)
-    .argument("[username]", "Username")
-    .argument("[password]", "Password")
+    .description("设置 HTTP 基础认证凭证")
+    .option("--clear", "清除凭证", false)
+    .argument("[username]", "用户名")
+    .argument("[password]", "密码")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (username: string | undefined, password: string | undefined, opts, cmd) => {
       const parent = parentOpts(cmd);
@@ -162,12 +162,12 @@ export function registerBrowserStateCommands(
 
   set
     .command("geo")
-    .description("Set geolocation (and grant permission)")
-    .option("--clear", "Clear geolocation + permissions", false)
-    .argument("[latitude]", "Latitude", (v: string) => Number(v))
-    .argument("[longitude]", "Longitude", (v: string) => Number(v))
-    .option("--accuracy <m>", "Accuracy in meters", (v: string) => Number(v))
-    .option("--origin <origin>", "Origin to grant permissions for")
+    .description("设置地理位置（并授予权限）")
+    .option("--clear", "清除地理位置 + 权限", false)
+    .argument("[latitude]", "纬度", (v: string) => Number(v))
+    .argument("[longitude]", "经度", (v: string) => Number(v))
+    .option("--accuracy <m>", "精度（米）", (v: string) => Number(v))
+    .option("--origin <origin>", "用于授予权限的来源")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (latitude: number | undefined, longitude: number | undefined, opts, cmd) => {
       const parent = parentOpts(cmd);
@@ -193,7 +193,7 @@ export function registerBrowserStateCommands(
 
   set
     .command("media")
-    .description("Emulate prefers-color-scheme")
+    .description("模拟偏好颜色主题")
     .argument("<dark|light|none>", "dark/light/none")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (value: string, opts, cmd) => {
@@ -204,7 +204,7 @@ export function registerBrowserStateCommands(
       const colorScheme =
         v === "dark" ? "dark" : v === "light" ? "light" : v === "none" ? "none" : null;
       if (!colorScheme) {
-        defaultRuntime.error(danger("Expected dark|light|none"));
+        defaultRuntime.error(danger("期望 dark|light|none"));
         defaultRuntime.exit(1);
         return;
       }
@@ -224,8 +224,8 @@ export function registerBrowserStateCommands(
 
   set
     .command("timezone")
-    .description("Override timezone (CDP)")
-    .argument("<timezoneId>", "Timezone ID (e.g. America/New_York)")
+    .description("覆盖时区（CDP）")
+    .argument("<timezoneId>", "时区 ID（例如 America/New_York）")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (timezoneId: string, opts, cmd) => {
       const parent = parentOpts(cmd);
@@ -247,8 +247,8 @@ export function registerBrowserStateCommands(
 
   set
     .command("locale")
-    .description("Override locale (CDP)")
-    .argument("<locale>", "Locale (e.g. en-US)")
+    .description("覆盖区域设置（CDP）")
+    .argument("<locale>", "区域设置（例如 en-US）")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (locale: string, opts, cmd) => {
       const parent = parentOpts(cmd);
@@ -271,7 +271,7 @@ export function registerBrowserStateCommands(
   set
     .command("device")
     .description('Apply a Playwright device descriptor (e.g. "iPhone 14")')
-    .argument("<name>", "Device name (Playwright devices)")
+    .argument("<name>", "设备名称（Playwright 设备）")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
     .action(async (name: string, opts, cmd) => {
       const parent = parentOpts(cmd);

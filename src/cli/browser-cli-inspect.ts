@@ -16,10 +16,10 @@ export function registerBrowserInspectCommands(
     .command("screenshot")
     .description("捕获屏幕截图（MEDIA:<路径>）")
     .argument("[targetId]", "CDP target id (or unique prefix)")
-    .option("--full-page", "Capture full scrollable page", false)
+    .option("--full-page", "捕获完整可滚动页面", false)
     .option("--ref <ref>", "ARIA ref from ai snapshot")
     .option("--element <selector>", "CSS selector for element screenshot")
-    .option("--type <png|jpeg>", "Output type (default: png)", "png")
+    .option("--type <png|jpeg>", "输出类型（默认：png）", "png")
     .action(async (targetId: string | undefined, opts, cmd) => {
       const parent = parentOpts(cmd);
       const baseUrl = resolveBrowserControlUrl(parent?.url);
@@ -47,18 +47,18 @@ export function registerBrowserInspectCommands(
   browser
     .command("snapshot")
     .description("捕获快照（默认：ai；aria 是无障碍树）")
-    .option("--format <aria|ai>", "Snapshot format (default: ai)", "ai")
+    .option("--format <aria|ai>", "快照格式（默认：ai）", "ai")
     .option("--target-id <id>", "CDP target id (or unique prefix)")
-    .option("--limit <n>", "Max nodes (default: 500/800)", (v: string) => Number(v))
-    .option("--mode <efficient>", "Snapshot preset (efficient)")
-    .option("--efficient", "Use the efficient snapshot preset", false)
-    .option("--interactive", "Role snapshot: interactive elements only", false)
-    .option("--compact", "Role snapshot: compact output", false)
-    .option("--depth <n>", "Role snapshot: max depth", (v: string) => Number(v))
-    .option("--selector <sel>", "Role snapshot: scope to CSS selector")
-    .option("--frame <sel>", "Role snapshot: scope to an iframe selector")
-    .option("--labels", "Include viewport label overlay screenshot", false)
-    .option("--out <path>", "Write snapshot to a file")
+    .option("--limit <n>", "最大节点数（默认：500/800）", (v: string) => Number(v))
+    .option("--mode <efficient>", "快照预设（高效）")
+    .option("--efficient", "使用高效快照预设", false)
+    .option("--interactive", "角色快照：仅交互元素", false)
+    .option("--compact", "角色快照：紧凑输出", false)
+    .option("--depth <n>", "角色快照：最大深度", (v: string) => Number(v))
+    .option("--selector <sel>", "角色快照：限定到 CSS 选择器")
+    .option("--frame <sel>", "角色快照：限定到 iframe 选择器")
+    .option("--labels", "包含视口标签叠加截图", false)
+    .option("--out <path>", "将快照写入文件")
     .action(async (opts, cmd) => {
       const parent = parentOpts(cmd);
       const baseUrl = resolveBrowserControlUrl(parent?.url);

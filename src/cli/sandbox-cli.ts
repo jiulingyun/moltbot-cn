@@ -60,7 +60,7 @@ function createRunner(
 export function registerSandboxCli(program: Command) {
   const sandbox = program
     .command("sandbox")
-    .description("Manage sandbox containers (Docker-based agent isolation)")
+    .description("管理沙箱容器（基于 Docker 的智能体隔离）")
     .addHelpText(
       "after",
       () => `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.main)}\n`,
@@ -84,9 +84,13 @@ export function registerSandboxCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.list)}\n\n${theme.heading(
-          "Output includes:",
-        )}\n${theme.muted("- Container name and status (running/stopped)")}\n${theme.muted(
+        `
+${theme.heading("Examples:")}
+${formatHelpExamples(SANDBOX_EXAMPLES.list)}
+
+${theme.heading(
+  "Output includes:",
+)}\n${theme.muted("- Container name and status (running/stopped)")}\n${theme.muted(
           "- Docker image and whether it matches current config",
         )}\n${theme.muted("- Age (time since creation)")}\n${theme.muted(
           "- Idle time (time since last use)",
@@ -117,9 +121,11 @@ export function registerSandboxCli(program: Command) {
     .addHelpText(
       "after",
       () =>
-        `\n${theme.heading("Examples:")}\n${formatHelpExamples(SANDBOX_EXAMPLES.recreate)}\n\n${theme.heading(
-          "Why use this?",
-        )}\n${theme.muted(
+        `
+${theme.heading("Examples:")}
+${formatHelpExamples(SANDBOX_EXAMPLES.recreate)}
+
+${theme.heading("Why use this?")}\n${theme.muted(
           "After updating Docker images or sandbox configuration, existing containers continue running with old settings.",
         )}\n${theme.muted(
           "This command removes them so they'll be recreated automatically with current config when next needed.",

@@ -49,7 +49,7 @@ export function registerPairingCli(program: Command) {
   const channels = listPairingChannels();
   const pairing = program
     .command("pairing")
-    .description("Secure DM pairing (approve inbound requests)")
+    .description("安全 DM 配对（批准入站请求）")
     .addHelpText(
       "after",
       () =>

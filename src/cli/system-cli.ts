@@ -19,7 +19,7 @@ const normalizeWakeMode = (raw: unknown) => {
 export function registerSystemCli(program: Command) {
   const system = program
     .command("system")
-    .description("System tools (events, heartbeat, presence)")
+    .description("系统工具（事件、心跳、在线状态）")
     .addHelpText(
       "after",
       () =>
