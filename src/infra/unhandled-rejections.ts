@@ -30,6 +30,17 @@ export function isUnhandledRejectionHandled(reason: unknown): boolean {
 export function installUnhandledRejectionHandler(): void {
   process.on("unhandledRejection", (reason, _promise) => {
     if (isUnhandledRejectionHandled(reason)) return;
+
+    // Ignore AbortError during shutdown/restart as they are expected
+    // when HTTP requests/connections are terminated during gateway restart
+    if (reason instanceof Error && reason.name === "AbortError") {
+      console.warn(
+        "[clawdbot] AbortError during operation (expected during restart):",
+        reason.message,
+      );
+      return;
+    }
+
     console.error("[clawdbot] Unhandled promise rejection:", formatUncaughtError(reason));
     process.exit(1);
   });

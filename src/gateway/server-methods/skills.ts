@@ -176,7 +176,13 @@ export const skillsHandlers: GatewayRequestHandlers = {
       ...cfg,
       skills,
     };
-    await writeConfigFile(nextConfig);
+    // First respond to the client
     respond(true, { ok: true, skillKey: p.skillKey, config: current }, undefined);
+    // Then write config asynchronously to avoid aborting the response
+    setImmediate(() => {
+      writeConfigFile(nextConfig).catch(() => {
+        // Config write error is logged elsewhere; this prevents unhandled rejection
+      });
+    });
   },
 };
