@@ -1,20 +1,20 @@
 ---
-summary: "Node.js + npm install sanity: versions, PATH, and global installs"
+summary: "Node.js + npm 安装指南：版本、PATH 和全局安装"
 read_when:
-  - You installed Clawdbot but `clawdbot` is “command not found”
-  - You’re setting up Node.js/npm on a new machine
-  - `npm install -g ...` fails with permissions or PATH issues
+  - 安装了 Clawdbot 但 `clawdbot-cn` 显示"命令未找到"
+  - 在新机器上设置 Node.js/npm
+  - `npm install -g ...` 因权限或 PATH 问题失败
 ---
 
-# Node.js + npm (PATH sanity)
+# Node.js + npm（PATH 检查）
 
-Clawdbot’s runtime baseline is **Node 22+**.
+Clawdbot 的运行时基准是 **Node 22+**。
 
-If you can run `npm install -g clawdbot-cn@latest` but later see `clawdbot-cn: command not found`, it’s almost always a **PATH** issue: the directory where npm puts global binaries isn’t on your shell’s PATH.
+如果你能运行 `npm install -g clawdbot-cn@latest` 但之后看到 `clawdbot-cn: command not found`，几乎总是 **PATH** 问题：npm 放置全局二进制文件的目录不在你的 shell PATH 中。
 
-## Quick diagnosis
+## 快速诊断
 
-Run:
+运行：
 
 ```bash
 node -v
@@ -23,35 +23,35 @@ npm prefix -g
 echo "$PATH"
 ```
 
-If `$(npm prefix -g)/bin` (macOS/Linux) or `$(npm prefix -g)` (Windows) is **not** present inside `echo "$PATH"`, your shell can’t find global npm binaries (including `clawdbot`).
+如果 `$(npm prefix -g)/bin`（macOS/Linux）或 `$(npm prefix -g)`（Windows）**不在** `echo "$PATH"` 输出中，你的 shell 找不到全局 npm 二进制文件（包括 `clawdbot-cn`）。
 
-## Fix: put npm’s global bin dir on PATH
+## 修复：将 npm 的全局 bin 目录添加到 PATH
 
-1) Find your global npm prefix:
+1) 找到你的全局 npm 前缀：
 
 ```bash
 npm prefix -g
 ```
 
-2) Add the global npm bin directory to your shell startup file:
+2) 将全局 npm bin 目录添加到你的 shell 启动文件：
 
-- zsh: `~/.zshrc`
-- bash: `~/.bashrc`
+- zsh：`~/.zshrc`
+- bash：`~/.bashrc`
 
-Example (replace the path with your `npm prefix -g` output):
+示例（将路径替换为你的 `npm prefix -g` 输出）：
 
 ```bash
 # macOS / Linux
 export PATH="/path/from/npm/prefix/bin:$PATH"
 ```
 
-Then open a **new terminal** (or run `rehash` in zsh / `hash -r` in bash).
+然后打开**新终端**（或在 zsh 中运行 `rehash` / 在 bash 中运行 `hash -r`）。
 
-On Windows, add the output of `npm prefix -g` to your PATH.
+在 Windows 上，将 `npm prefix -g` 的输出添加到 PATH。
 
-## Fix: avoid `sudo npm install -g` / permission errors (Linux)
+## 修复：避免 `sudo npm install -g` / 权限错误（Linux）
 
-If `npm install -g ...` fails with `EACCES`, switch npm’s global prefix to a user-writable directory:
+如果 `npm install -g ...` 因 `EACCES` 失败，将 npm 的全局前缀切换到用户可写目录：
 
 ```bash
 mkdir -p "$HOME/.npm-global"
@@ -59,19 +59,19 @@ npm config set prefix "$HOME/.npm-global"
 export PATH="$HOME/.npm-global/bin:$PATH"
 ```
 
-Persist the `export PATH=...` line in your shell startup file.
+在你的 shell 启动文件中持久化 `export PATH=...` 行。
 
-## Recommended Node install options
+## 推荐的 Node 安装选项
 
-You’ll have the fewest surprises if Node/npm are installed in a way that:
+如果 Node/npm 以以下方式安装，你会遇到最少的问题：
 
-- keeps Node updated (22+)
-- makes the global npm bin dir stable and on PATH in new shells
+- 保持 Node 更新（22+）
+- 使全局 npm bin 目录稳定并在新 shell 中位于 PATH 中
 
-Common choices:
+常见选择：
 
-- macOS: Homebrew (`brew install node`) or a version manager
-- Linux: your preferred version manager, or a distro-supported install that provides Node 22+
-- Windows: official Node installer, `winget`, or a Windows Node version manager
+- macOS：Homebrew（`brew install node`）或版本管理器
+- Linux：你首选的版本管理器，或提供 Node 22+ 的发行版支持的安装
+- Windows：官方 Node 安装程序、`winget` 或 Windows Node 版本管理器
 
-If you use a version manager (nvm/fnm/asdf/etc), ensure it’s initialized in the shell you use day-to-day (zsh vs bash) so the PATH it sets is present when you run installers.
+如果你使用版本管理器（nvm/fnm/asdf/等），确保它在你日常使用的 shell（zsh vs bash）中初始化，以便运行安装器时它设置的 PATH 存在。
