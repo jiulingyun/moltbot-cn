@@ -1,97 +1,97 @@
 ---
-summary: "How the installer scripts work (install.sh + install-cli.sh), flags, and automation"
+summary: "安装程序脚本的工作原理（install.sh + install-cli.sh）、标志和自动化"
 read_when:
-  - You want to understand `clawd.bot/install.sh`
-  - You want to automate installs (CI / headless)
-  - You want to install from a GitHub checkout
+  - 您想了解 `clawd.bot/install.sh`
+  - 您想自动化安装（CI / 无人值守）
+  - 您想从 GitHub 检出安装
 ---
 
-# Installer internals
+# 安装程序内部机制
 
-Clawdbot ships two installer scripts (served from `clawd.bot`):
+Clawdbot 提供两个安装程序脚本（从 `clawd.bot` 提供）：
 
-- `https://clawd.bot/install.sh` — “recommended” installer (global npm install by default; can also install from a GitHub checkout)
-- `https://clawd.bot/install-cli.sh` — non-root-friendly CLI installer (installs into a prefix with its own Node)
- - `https://clawd.bot/install.ps1` — Windows PowerShell installer (npm by default; optional git install)
+- `https://clawd.bot/install.sh` — “推荐”安装程序（默认全局 npm 安装；也可以从 GitHub 检出安装）
+- `https://clawd.bot/install-cli.sh` — 非 root 友好的 CLI 安装程序（安装到前缀中并带有自己的 Node）
+- `https://clawd.bot/install.ps1` — Windows PowerShell 安装程序（默认 npm；可选 git 安装）
 
-To see the current flags/behavior, run:
+要查看当前的标志/行为，请运行：
 
 ```bash
 curl -fsSL https://clawd.bot/install.sh | bash -s -- --help
 ```
 
-Windows (PowerShell) help:
+Windows（PowerShell）帮助：
 
 ```powershell
 & ([scriptblock]::Create((iwr -useb https://clawd.bot/install.ps1))) -?
 ```
 
-If the installer completes but `clawdbot` is not found in a new terminal, it’s usually a Node/npm PATH issue. See: [Install](/install#nodejs--npm-path-sanity).
+如果安装程序完成但在新终端中找不到 `clawdbot`，通常是 Node/npm PATH 问题。参见：[安装](/install#nodejs--npm-path-sanity)。
 
-## install.sh (recommended)
+## install.sh（推荐）
 
-What it does (high level):
+它的作用（高级别）：
 
-- Detect OS (macOS / Linux / WSL).
-- Ensure Node.js **22+** (macOS via Homebrew; Linux via NodeSource).
-- Choose install method:
-  - `npm` (default): `npm install -g clawdbot@latest`
-  - `git`: clone/build a source checkout and install a wrapper script
-- On Linux: avoid global npm permission errors by switching npm’s prefix to `~/.npm-global` when needed.
-- If upgrading an existing install: runs `clawdbot doctor --non-interactive` (best effort).
-- For git installs: runs `clawdbot doctor --non-interactive` after install/update (best effort).
-- Mitigates `sharp` native install gotchas by defaulting `SHARP_IGNORE_GLOBAL_LIBVIPS=1` (avoids building against system libvips).
+- 检测操作系统（macOS / Linux / WSL）。
+- 确保 Node.js **22+**（macOS 通过 Homebrew；Linux 通过 NodeSource）。
+- 选择安装方法：
+  - `npm`（默认）：`npm install -g clawdbot@latest`
+  - `git`：克隆/构建源代码检出并安装包装脚本
+- 在 Linux 上：通过在需要时将 npm 的前缀切换到 `~/.npm-global` 来避免全局 npm 权限错误。
+- 如果升级现有安装：运行 `clawdbot-cn doctor --non-interactive`（尽力而为）。
+- 对于 git 安装：在安装/更新后运行 `clawdbot-cn doctor --non-interactive`（尽力而为）。
+- 通过默认设置 `SHARP_IGNORE_GLOBAL_LIBVIPS=1` 来缓解 `sharp` 本地安装问题（避免针对系统 libvips 构建）。
 
-If you *want* `sharp` to link against a globally-installed libvips (or you’re debugging), set:
+如果您*想要* `sharp` 链接到全局安装的 libvips（或您正在调试），请设置：
 
 ```bash
 SHARP_IGNORE_GLOBAL_LIBVIPS=0 curl -fsSL https://clawd.bot/install.sh | bash
 ```
 
-### Discoverability / “git install” prompt
+### 可发现性 / “git 安装”提示
 
-If you run the installer while **already inside a Clawdbot source checkout** (detected via `package.json` + `pnpm-workspace.yaml`), it prompts:
+如果您在**已经在 Clawdbot 源代码检出内**时运行安装程序（通过 `package.json` + `pnpm-workspace.yaml` 检测），它会提示：
 
-- update and use this checkout (`git`)
-- or migrate to the global npm install (`npm`)
+- 更新并使用此检出（`git`）
+- 或迁移到全局 npm 安装（`npm`）
 
-In non-interactive contexts (no TTY / `--no-prompt`), you must pass `--install-method git|npm` (or set `CLAWDBOT_INSTALL_METHOD`), otherwise the script exits with code `2`.
+在非交互式环境中（无 TTY / `--no-prompt`），您必须传递 `--install-method git|npm`（或设置 `CLAWDBOT_INSTALL_METHOD`），否则脚本将以代码 `2` 退出。
 
-### Why Git is needed
+### 为什么需要 Git
 
-Git is required for the `--install-method git` path (clone / pull).
+`--install-method git` 路径（克隆 / 拉取）需要 Git。
 
-For `npm` installs, Git is *usually* not required, but some environments still end up needing it (e.g. when a package or dependency is fetched via a git URL). The installer currently ensures Git is present to avoid `spawn git ENOENT` surprises on fresh distros.
+对于 `npm` 安装，通常不需要 Git，但某些环境仍然需要它（例如，当包或依赖项通过 git URL 获取时）。安装程序当前确保 Git 存在，以避免在新发行版上出现 `spawn git ENOENT` 意外。
 
-### Why npm hits `EACCES` on fresh Linux
+### 为什么 npm 在新 Linux 上遇到 `EACCES`
 
-On some Linux setups (especially after installing Node via the system package manager or NodeSource), npm’s global prefix points at a root-owned location. Then `npm install -g ...` fails with `EACCES` / `mkdir` permission errors.
+在某些 Linux 设置中（尤其是在通过系统包管理器或 NodeSource 安装 Node 后），npm 的全局前缀指向 root 拥有的位置。然后 `npm install -g ...` 因 `EACCES` / `mkdir` 权限错误而失败。
 
-`install.sh` mitigates this by switching the prefix to:
+`install.sh` 通过将前缀切换到以下位置来缓解此问题：
 
-- `~/.npm-global` (and adding it to `PATH` in `~/.bashrc` / `~/.zshrc` when present)
+- `~/.npm-global`（并在存在时将其添加到 `~/.bashrc` / `~/.zshrc` 中的 `PATH`）
 
-## install-cli.sh (non-root CLI installer)
+## install-cli.sh（非 root CLI 安装程序）
 
-This script installs `clawdbot` into a prefix (default: `~/.clawdbot`) and also installs a dedicated Node runtime under that prefix, so it can work on machines where you don’t want to touch the system Node/npm.
+此脚本将 `clawdbot` 安装到前缀中（默认：`~/.clawdbot`）并也在该前缀下安装专用的 Node 运行时，因此它可以在您不想触摸系统 Node/npm 的机器上工作。
 
-Help:
+帮助：
 
 ```bash
 curl -fsSL https://clawd.bot/install-cli.sh | bash -s -- --help
 ```
 
-## install.ps1 (Windows PowerShell)
+## install.ps1（Windows PowerShell）
 
-What it does (high level):
+它的作用（高级别）：
 
-- Ensure Node.js **22+** (winget/Chocolatey/Scoop or manual).
-- Choose install method:
-  - `npm` (default): `npm install -g clawdbot@latest`
-  - `git`: clone/build a source checkout and install a wrapper script
-- Runs `clawdbot doctor --non-interactive` on upgrades and git installs (best effort).
+- 确保 Node.js **22+**（winget/Chocolatey/Scoop 或手动）。
+- 选择安装方法：
+  - `npm`（默认）：`npm install -g clawdbot@latest`
+  - `git`：克隆/构建源代码检出并安装包装脚本
+- 在升级和 git 安装时运行 `clawdbot-cn doctor --non-interactive`（尽力而为）。
 
-Examples:
+示例：
 
 ```powershell
 iwr -useb https://clawd.bot/install.ps1 | iex
@@ -105,18 +105,18 @@ iwr -useb https://clawd.bot/install.ps1 | iex -InstallMethod git
 iwr -useb https://clawd.bot/install.ps1 | iex -InstallMethod git -GitDir "C:\\clawdbot"
 ```
 
-Environment variables:
+环境变量：
 
 - `CLAWDBOT_INSTALL_METHOD=git|npm`
 - `CLAWDBOT_GIT_DIR=...`
 
-Git requirement:
+Git 要求：
 
-If you choose `-InstallMethod git` and Git is missing, the installer will print the
-Git for Windows link (`https://git-scm.com/download/win`) and exit.
+如果您选择 `-InstallMethod git` 且 Git 缺失，安装程序将打印
+Git for Windows 链接（`https://git-scm.com/download/win`）并退出。
 
-Common Windows issues:
+常见的 Windows 问题：
 
-- **npm error spawn git / ENOENT**: install Git for Windows and reopen PowerShell, then rerun the installer.
-- **"clawdbot" is not recognized**: your npm global bin folder is not on PATH. Most systems use
-  `%AppData%\\npm`. You can also run `npm config get prefix` and add `\\bin` to PATH, then reopen PowerShell.
+- **npm error spawn git / ENOENT**：安装 Git for Windows 并重新打开 PowerShell，然后重新运行安装程序。
+- **"clawdbot" is not recognized**：您的 npm 全局 bin 文件夹不在 PATH 上。大多数系统使用
+  `%AppData%\\npm`。您也可以运行 `npm config get prefix` 并将 `\\bin` 添加到 PATH，然后重新打开 PowerShell。

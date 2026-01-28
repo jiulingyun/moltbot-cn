@@ -1,60 +1,60 @@
 ---
-summary: "Uninstall Clawdbot completely (CLI, service, state, workspace)"
+summary: "完全卸载 Clawdbot（CLI、服务、状态、工作区）"
 read_when:
-  - You want to remove Clawdbot from a machine
-  - The gateway service is still running after uninstall
+  - 您想从机器中移除 Clawdbot
+  - 卸载后网关服务仍在运行
 ---
 
-# Uninstall
+# 卸载
 
-Two paths:
-- **Easy path** if `clawdbot` is still installed.
-- **Manual service removal** if the CLI is gone but the service is still running.
+两条路径：
+- 如果 `clawdbot` 仍已安装，则使用**简单路径**。
+- 如果 CLI 已消失但服务仍在运行，则使用**手动服务移除**。
 
-## Easy path (CLI still installed)
+## 简单路径（CLI 仍已安装）
 
-Recommended: use the built-in uninstaller:
-
-```bash
-clawdbot uninstall
-```
-
-Non-interactive (automation / npx):
+推荐：使用内置卸载程序：
 
 ```bash
-clawdbot uninstall --all --yes --non-interactive
-npx -y clawdbot uninstall --all --yes --non-interactive
+clawdbot-cn uninstall
 ```
 
-Manual steps (same result):
-
-1) Stop the gateway service:
+非交互式（自动化 / npx）：
 
 ```bash
-clawdbot gateway stop
+clawdbot-cn uninstall --all --yes --non-interactive
+npx -y clawdbot-cn uninstall --all --yes --non-interactive
 ```
 
-2) Uninstall the gateway service (launchd/systemd/schtasks):
+手动步骤（相同结果）：
+
+1) 停止网关服务：
 
 ```bash
-clawdbot gateway uninstall
+clawdbot-cn gateway stop
 ```
 
-3) Delete state + config:
+2) 卸载网关服务（launchd/systemd/schtasks）：
+
+```bash
+clawdbot-cn gateway uninstall
+```
+
+3) 删除状态 + 配置：
 
 ```bash
 rm -rf "${CLAWDBOT_STATE_DIR:-$HOME/.clawdbot}"
 ```
 
-If you set `CLAWDBOT_CONFIG_PATH` to a custom location outside the state dir, delete that file too.
+如果您将 `CLAWDBOT_CONFIG_PATH` 设置为状态目录外的自定义位置，也删除该文件。
 
-4) Delete your workspace (optional, removes agent files):
+4) 删除您的工作区（可选，移除代理文件）：
 
 ```bash
 rm -rf ~/clawd
 ```
 
-5) Remove the CLI install (pick the one you used):
+5) 移除 CLI 安装（选择您使用的）：
 
 ```bash
 npm rm -g clawdbot
@@ -62,34 +62,34 @@ pnpm remove -g clawdbot
 bun remove -g clawdbot
 ```
 
-6) If you installed the macOS app:
+6) 如果您安装了 macOS 应用：
 
 ```bash
 rm -rf /Applications/Clawdbot.app
 ```
 
-Notes:
-- If you used profiles (`--profile` / `CLAWDBOT_PROFILE`), repeat step 3 for each state dir (defaults are `~/.clawdbot-<profile>`).
-- In remote mode, the state dir lives on the **gateway host**, so run steps 1-4 there too.
+注意事项：
+- 如果您使用了配置文件（`--profile` / `CLAWDBOT_PROFILE`），对每个状态目录重复步骤 3（默认为 `~/.clawdbot-<profile>`）。
+- 在远程模式下，状态目录位于**网关主机**上，因此也要在那里运行步骤 1-4。
 
-## Manual service removal (CLI not installed)
+## 手动服务移除（CLI 未安装）
 
-Use this if the gateway service keeps running but `clawdbot` is missing.
+如果网关服务持续运行但 `clawdbot` 缺失，请使用此方法。
 
-### macOS (launchd)
+### macOS（launchd）
 
-Default label is `com.clawdbot.gateway` (or `com.clawdbot.<profile>`):
+默认标签是 `com.clawdbot.gateway`（或 `com.clawdbot.<profile>`）：
 
 ```bash
 launchctl bootout gui/$UID/com.clawdbot.gateway
 rm -f ~/Library/LaunchAgents/com.clawdbot.gateway.plist
 ```
 
-If you used a profile, replace the label and plist name with `com.clawdbot.<profile>`.
+如果您使用了配置文件，将标签和 plist 名称替换为 `com.clawdbot.<profile>`。
 
-### Linux (systemd user unit)
+### Linux（systemd 用户单元）
 
-Default unit name is `clawdbot-gateway.service` (or `clawdbot-gateway-<profile>.service`):
+默认单元名称是 `clawdbot-gateway.service`（或 `clawdbot-gateway-<profile>.service`）：
 
 ```bash
 systemctl --user disable --now clawdbot-gateway.service
@@ -97,29 +97,29 @@ rm -f ~/.config/systemd/user/clawdbot-gateway.service
 systemctl --user daemon-reload
 ```
 
-### Windows (Scheduled Task)
+### Windows（计划任务）
 
-Default task name is `Clawdbot Gateway` (or `Clawdbot Gateway (<profile>)`).
-The task script lives under your state dir.
+默认任务名称是 `Clawdbot Gateway`（或 `Clawdbot Gateway (<profile>)`）。
+任务脚本位于您的状态目录下。
 
 ```powershell
 schtasks /Delete /F /TN "Clawdbot Gateway"
 Remove-Item -Force "$env:USERPROFILE\.clawdbot\gateway.cmd"
 ```
 
-If you used a profile, delete the matching task name and `~\.clawdbot-<profile>\gateway.cmd`.
+如果您使用了配置文件，删除匹配的任务名称和 `~\.clawdbot-<profile>\gateway.cmd`。
 
-## Normal install vs source checkout
+## 正常安装与源码检出
 
-### Normal install (install.sh / npm / pnpm / bun)
+### 正常安装（install.sh / npm / pnpm / bun）
 
-If you used `https://clawd.bot/install.sh` or `install.ps1`, the CLI was installed with `npm install -g clawdbot@latest`.
-Remove it with `npm rm -g clawdbot` (or `pnpm remove -g` / `bun remove -g` if you installed that way).
+如果您使用了 `https://clawd.bot/install.sh` 或 `install.ps1`，CLI 是用 `npm install -g clawdbot@latest` 安装的。
+用 `npm rm -g clawdbot`（或 `pnpm remove -g` / `bun remove -g`，如果您那样安装的话）移除它。
 
-### Source checkout (git clone)
+### 源码检出（git clone）
 
-If you run from a repo checkout (`git clone` + `clawdbot ...` / `bun run clawdbot ...`):
+如果您从仓库检出运行（`git clone` + `clawdbot ...` / `bun run clawdbot ...`）：
 
-1) Uninstall the gateway service **before** deleting the repo (use the easy path above or manual service removal).
-2) Delete the repo directory.
-3) Remove state + workspace as shown above.
+1) 在删除仓库**之前**卸载网关服务（使用上面的简单路径或手动服务移除）。
+2) 删除仓库目录。
+3) 按上述方式移除状态 + 工作区。
