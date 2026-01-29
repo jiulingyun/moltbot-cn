@@ -59,10 +59,8 @@ export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promi
   });
 
   // Create event dispatcher
-  logger.info("Creating Feishu event dispatcher...");
   const eventDispatcher = new Lark.EventDispatcher({}).register({
     "im.message.receive_v1": async (data) => {
-      logger.info(`[feishu] Received im.message.receive_v1 event`);
       try {
         await processFeishuMessage(client, data, appId);
       } catch (err) {
@@ -75,21 +73,22 @@ export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promi
   const wsClient = new Lark.WSClient({
     appId,
     appSecret,
+    loggerLevel: Lark.LoggerLevel.info,
     logger: {
-      debug: (...args) => {
-        logger.debug?.(args.join(" "));
+      debug: (msg) => {
+        logger.debug?.(msg);
       },
-      info: (...args) => {
-        logger.info(args.join(" "));
+      info: (msg) => {
+        logger.info(msg);
       },
-      warn: (...args) => {
-        logger.warn(args.join(" "));
+      warn: (msg) => {
+        logger.warn(msg);
       },
-      error: (...args) => {
-        logger.error(args.join(" "));
+      error: (msg) => {
+        logger.error(msg);
       },
-      trace: (...args) => {
-        logger.silly?.(args.join(" "));
+      trace: (msg) => {
+        logger.silly?.(msg);
       },
     },
   });
@@ -106,10 +105,9 @@ export async function monitorFeishuProvider(opts: MonitorFeishuOpts = {}): Promi
   }
 
   try {
-    logger.info("Starting Feishu WS client...");
-    await wsClient.start({
-      eventDispatcher,
-    });
+    logger.info("Starting Feishu WebSocket client...");
+    await wsClient.start({ eventDispatcher });
+    logger.info("Feishu WebSocket connection established");
 
     // The WSClient.start() should keep running until disconnected
     // If it returns, we need to keep the process alive

@@ -7,27 +7,17 @@ import { sendMessageFeishu } from "./send.js";
 const logger = getChildLogger({ module: "feishu-message" });
 
 export async function processFeishuMessage(client: Client, data: any, appId: string) {
-  // data is the event payload from Lark SDK
-  // We expect "im.message.receive_v1" event structure
-  // https://open.feishu.cn/document/server-side-sdk/nodejs-sdk/handling-callbacks
+  // SDK 2.0 schema: data directly contains message, sender, etc.
+  const message = data.message ?? data.event?.message;
+  const sender = data.sender ?? data.event?.sender;
 
-  logger.info(`[feishu] Received event: ${JSON.stringify(data).slice(0, 500)}`);
-
-  const event = data.event;
-  if (!event || !event.message) {
-    logger.warn(
-      `[feishu] Received invalid Feishu event structure: ${JSON.stringify(data).slice(0, 200)}`,
-    );
+  if (!message) {
+    logger.warn(`Received event without message field`);
     return;
   }
 
-  const message = event.message;
-  const sender = event.sender;
   const chatId = message.chat_id;
-
-  logger.info(
-    `[feishu] Processing message: chatId=${chatId}, type=${message.message_type}, sender=${sender?.sender_id?.open_id}`,
-  );
+  const isGroup = message.chat_type === "group";
 
   // Only handle text messages for now
   if (message.message_type !== "text") {
@@ -44,15 +34,31 @@ export async function processFeishuMessage(client: Client, data: any, appId: str
     return;
   }
 
-  if (!text) return;
+  // Handle @mentions
+  const mentions = message.mentions ?? data.mentions ?? [];
+  const wasMentioned = mentions.length > 0;
 
-  const senderId = sender.sender_id?.open_id || sender.sender_id?.user_id || "unknown";
-  const senderName = sender.sender_id?.user_id || "unknown"; // Lark doesn't provide name in event usually?
+  // In group chat, only respond when bot is mentioned
+  if (isGroup && !wasMentioned) {
+    logger.debug(`Ignoring group message without @mention`);
+    return;
+  }
 
+  // Remove @mention placeholders from text
+  for (const mention of mentions) {
+    if (mention.key) {
+      text = text.replace(mention.key, "").trim();
+    }
+  }
+
+  if (!text) {
+    logger.debug(`Empty text after processing, skipping`);
+    return;
+  }
+
+  const senderId = sender?.sender_id?.open_id || sender?.sender_id?.user_id || "unknown";
+  const senderName = sender?.sender_id?.user_id || "unknown";
   const cfg = loadConfig();
-
-  const isGroup = message.chat_type === "group";
-  const isP2P = message.chat_type === "p2p";
 
   // Context construction
   const ctx = {
@@ -76,14 +82,8 @@ export async function processFeishuMessage(client: Client, data: any, appId: str
     ctx,
     cfg,
     dispatcherOptions: {
-      deliver: async (payload, info) => {
-        // payload.text contains the reply text
+      deliver: async (payload) => {
         if (!payload.text) return;
-
-        // If it's a final response or a block, we send it.
-        // For streaming, we might want to accumulate or use "interactive" cards if supported.
-        // For now, just send text.
-
         await sendMessageFeishu(
           client,
           chatId,
@@ -94,14 +94,13 @@ export async function processFeishuMessage(client: Client, data: any, appId: str
           },
         );
       },
-      onError: (err, info) => {
+      onError: (err) => {
         logger.error(`Reply error: ${err}`);
       },
-      // Simple typing indicator if supported (Lark has no typing indicator API publicly generally available or simple)
       onReplyStart: () => {},
     },
     replyOptions: {
-      disableBlockStreaming: true, // Simple text implementation first
+      disableBlockStreaming: true,
     },
   });
 }
