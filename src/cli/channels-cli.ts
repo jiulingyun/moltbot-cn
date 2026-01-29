@@ -155,6 +155,7 @@ export function registerChannelsCli(program: Command) {
   channels
     .command("add")
     .description("添加或更新渠道账户")
+    .argument("[channel]", "渠道名称 (可选)")
     .option("--channel <name>", `渠道 (${channelNames})`)
     .option("--account <id>", "账户 ID（省略时为默认）")
     .option("--name <name>", "此账户的显示名称")
@@ -189,10 +190,47 @@ export function registerChannelsCli(program: Command) {
     .option("--auto-discover-channels", "Tlon 自动发现群组频道")
     .option("--no-auto-discover-channels", "禁用 Tlon 自动发现")
     .option("--use-env", "使用环境变量令牌（仅默认账户）", false)
-    .action(async (opts, command) => {
+    .action(async (channelArg, opts, command) => {
+      // Handle the case where arguments are shifted if channelArg is not provided but opts are?
+      // Commander passes arguments first, then options, then command object.
+      // If [channel] is optional, the first arg might be opts if channel is missing?
+      // No, commander handles this. If channelArg is present it is the string.
+
+      // If we use .argument('[channel]'), the action signature becomes (channel, options, command)
+      // If the user doesn't provide channel, channel is undefined.
+
+      // However, the previous signature was (opts, command).
+      // We need to adjust.
+
+      let finalOpts = opts;
+      let finalCommand = command;
+      let channelName = channelArg;
+
+      // Commander weirdness check: if we define argument, it comes first.
+      // But if we are in a situation where I am unsure if 'channelArg' is actually 'opts'
+      // (though with .argument it should be robust), let's just trust types if I could see them.
+      // In JS runtime:
+      // action(arg1, arg2, arg3)
+      // if [channel] provided: arg1=channel, arg2=opts, arg3=cmd
+      // if not provided: arg1=undefined, arg2=opts, arg3=cmd
+
+      if (typeof channelArg === "object" && channelArg !== null && "channel" in channelArg) {
+        // This would happen if I didn't add .argument, but I did.
+        // Wait, if I change the definition, the action signature changes.
+        // So I must match the new signature.
+      }
+
+      // Re-assign for clarity
+      const options = opts;
+      const cmd = command;
+
+      if (channelName && typeof channelName === "string") {
+        options.channel = channelName;
+      }
+
       await runChannelsCommand(async () => {
-        const hasFlags = hasExplicitOptions(command, optionNamesAdd);
-        await channelsAddCommand(opts, defaultRuntime, { hasFlags });
+        const hasFlags = hasExplicitOptions(cmd, optionNamesAdd);
+        await channelsAddCommand(options, defaultRuntime, { hasFlags });
       });
     });
 

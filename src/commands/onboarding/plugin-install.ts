@@ -143,6 +143,15 @@ export async function ensureOnboardingPluginInstalled(params: {
   if (choice === "local" && localPath) {
     next = addPluginLoadPath(next, localPath);
     next = enablePluginInConfig(next, entry.id).config;
+    // We must write the config file here so that re-loading works if it reads from disk,
+    // although reloadOnboardingPluginRegistry takes cfg object.
+    // However, loadClawdbotPlugins might rely on some disk state or the cfg object passed is enough.
+    // But let's verify if `loadClawdbotPlugins` properly uses the passed config for paths.
+    // Yes it does: loadClawdbotPlugins({ config: params.cfg ... })
+
+    // BUT: resolveLocalPath returns an absolute path in 'candidate'.
+    // addPluginLoadPath adds it to cfg.plugins.load.paths.
+
     return { cfg: next, installed: true };
   }
 

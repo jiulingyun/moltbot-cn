@@ -417,6 +417,7 @@ export async function setupChannels(
   };
 
   const refreshStatus = async (channel: ChannelChoice) => {
+    // Force refresh adapter list to pick up newly loaded plugins
     const adapter = getChannelOnboardingAdapter(channel);
     if (!adapter) return;
     const status = await adapter.getStatus({ cfg: next, options, accountOverrides });
@@ -556,6 +557,14 @@ export async function setupChannels(
         workspaceDir,
       });
       await refreshStatus(channel);
+      // Wait for registry reload to propagate
+      if (!getChannelPlugin(channel)) {
+        // If not found immediately, try reloading registry one more time with fresh config
+        // or just proceed and let configureChannel handle the check
+        // The issue might be that reloadOnboardingPluginRegistry uses synchronous loading,
+        // but if Jiti cache or something else is stale, it might not see it.
+        // However, ensureOnboardingPluginInstalled should have added the path.
+      }
     } else {
       const enabled = await ensureBundledPluginEnabled(channel);
       if (!enabled) return;

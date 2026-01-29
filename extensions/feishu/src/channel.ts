@@ -8,6 +8,7 @@ import {
   getChatChannelMeta
 } from "clawdbot/plugin-sdk";
 import { createFeishuBot, startFeishuBot } from "../../../src/feishu/bot.js";
+import { feishuOnboardingAdapter } from "./onboarding.js";
 
 const meta = getChatChannelMeta("feishu");
 
@@ -17,7 +18,7 @@ export const feishuPlugin: ChannelPlugin = {
       ...meta,
       quickstartAllowFrom: true,
   },
-  onboarding: {},
+  onboarding: feishuOnboardingAdapter,
   outbound: feishuOutbound,
   messaging: {
       normalizeTarget: normalizeFeishuTarget,
