@@ -142,11 +142,24 @@ export async function sendMessageFeishu(
         msgType = "media";
         finalContent = { file_key: fileKey };
       } else if (kind === "audio") {
-        // Upload audio and send as audio message
-        // Note: Feishu audio messages require opus format
-        const fileKey = await uploadFileFeishu(client, media.buffer, fileName, "opus");
-        msgType = "audio";
-        finalContent = { file_key: fileKey };
+        // Feishu audio messages (msg_type: "audio") only support opus format
+        // For other audio formats (mp3, wav, etc.), send as file instead
+        const isOpus =
+          media.contentType?.includes("opus") ||
+          media.contentType?.includes("ogg") ||
+          fileName.toLowerCase().endsWith(".opus") ||
+          fileName.toLowerCase().endsWith(".ogg");
+
+        if (isOpus) {
+          const fileKey = await uploadFileFeishu(client, media.buffer, fileName, "opus");
+          msgType = "audio";
+          finalContent = { file_key: fileKey };
+        } else {
+          // Send non-opus audio as file attachment
+          const fileKey = await uploadFileFeishu(client, media.buffer, fileName, "stream");
+          msgType = "file";
+          finalContent = { file_key: fileKey };
+        }
       } else {
         // Upload as file
         const fileType = resolveFeishuFileType(media.contentType, fileName);

@@ -117,16 +117,43 @@ export async function processFeishuMessage(
     cfg,
     dispatcherOptions: {
       deliver: async (payload) => {
-        if (!payload.text) return;
-        await sendMessageFeishu(
-          client,
-          chatId,
-          { text: payload.text },
-          {
-            msgType: "text",
-            receiveIdType: "chat_id",
-          },
-        );
+        const hasMedia = payload.mediaUrl || (payload.mediaUrls && payload.mediaUrls.length > 0);
+        if (!payload.text && !hasMedia) return;
+
+        // Handle media URLs
+        const mediaUrls = payload.mediaUrls?.length
+          ? payload.mediaUrls
+          : payload.mediaUrl
+            ? [payload.mediaUrl]
+            : [];
+
+        if (mediaUrls.length > 0) {
+          // Send each media item
+          for (let i = 0; i < mediaUrls.length; i++) {
+            const mediaUrl = mediaUrls[i];
+            const caption = i === 0 ? payload.text || "" : "";
+            await sendMessageFeishu(
+              client,
+              chatId,
+              { text: caption },
+              {
+                mediaUrl,
+                receiveIdType: "chat_id",
+              },
+            );
+          }
+        } else if (payload.text) {
+          // Text-only message
+          await sendMessageFeishu(
+            client,
+            chatId,
+            { text: payload.text },
+            {
+              msgType: "text",
+              receiveIdType: "chat_id",
+            },
+          );
+        }
       },
       onError: (err) => {
         logger.error(`Reply error: ${err}`);
