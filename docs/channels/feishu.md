@@ -33,8 +33,10 @@ moltbot-cn onboard
 如果您已经完成了初始安装，可以用以下命令添加飞书渠道：
 
 ```bash
-moltbot-cn channels add --channel feishu --app-id "您的AppID" --app-secret "您的AppSecret"
+moltbot-cn channels add
 ```
+
+然后根据交互式提示选择 Feishu，输入 App ID 和 App Secret 即可。
 
 ---
 
@@ -50,6 +52,8 @@ moltbot-cn channels add --channel feishu --app-id "您的AppID" --app-secret "�
 2. 填写应用名称和描述
 3. 选择应用图标
 
+![创建企业自建应用](../images/feishu-step2-create-app.png)
+
 ### 3. 获取应用凭证
 
 在应用的 **凭证与基础信息** 页面，复制：
@@ -58,21 +62,43 @@ moltbot-cn channels add --channel feishu --app-id "您的AppID" --app-secret "�
 
 ❗ **重要**：请妥善保管 App Secret，不要分享给他人。
 
+![获取应用凭证](../images/feishu-step3-credentials.png)
+
 ### 4. 配置应用权限
 
-在 **权限管理** 页面，添加以下权限：
+在 **权限管理** 页面，点击 **批量导入** 按钮，粘贴以下 JSON 配置一键导入所需权限：
 
-**消息与群组**：
-- `im:message` - 获取与发送单聊、群组消息
-- `im:message.group_at_msg` - 接收群聊中 @ 机器人消息
-- `im:message.group_at_msg:readonly` - 获取群组中 @ 机器人消息
-- `im:message.p2p_msg` - 获取用户发给机器人的单聊消息
-- `im:message.p2p_msg:readonly` - 读取用户发给机器人的单聊消息
-- `im:message:send_as_bot` - 以应用的身份发消息
-- `im:resource` - 获取与上传图片或文件资源
+```json
+{
+  "scopes": {
+    "tenant": [
+      "aily:file:read",
+      "aily:file:write",
+      "application:application.app_message_stats.overview:readonly",
+      "application:application:self_manage",
+      "application:bot.menu:write",
+      "contact:user.employee_id:readonly",
+      "corehr:file:download",
+      "event:ip_list",
+      "im:chat.access_event.bot_p2p_chat:read",
+      "im:chat.members:bot_access",
+      "im:message",
+      "im:message.group_at_msg:readonly",
+      "im:message.p2p_msg:readonly",
+      "im:message:readonly",
+      "im:message:send_as_bot",
+      "im:resource"
+    ],
+    "user": [
+      "aily:file:read",
+      "aily:file:write",
+      "im:chat.access_event.bot_p2p_chat:read"
+    ]
+  }
+}
+```
 
-**用户信息**（可选，用于显示用户名）：
-- `contact:user.base:readonly` - 获取用户基本信息
+![配置应用权限](../images/feishu-step4-permissions.png)
 
 ### 5. 启用机器人能力
 
@@ -80,11 +106,15 @@ moltbot-cn channels add --channel feishu --app-id "您的AppID" --app-secret "�
 1. 开启机器人能力
 2. 配置机器人名称
 
+![启用机器人能力](../images/feishu-step5-bot-capability.png)
+
 ### 6. 配置事件订阅
 
 在 **事件订阅** 页面：
 1. 选择 **使用长连接接收事件**（WebSocket 模式）
 2. 添加事件：`im.message.receive_v1`（接收消息）
+
+![配置事件订阅](../images/feishu-step6-event-subscription.png)
 
 ### 7. 发布应用
 
@@ -96,15 +126,15 @@ moltbot-cn channels add --channel feishu --app-id "您的AppID" --app-secret "�
 
 ## 第二步：配置 Moltbot
 
-### 通过向导配置
+### 通过向导配置（推荐）
 
-运行 `moltbot-cn onboard` 或 `moltbot-cn configure`，根据提示粘贴 App ID 和 App Secret。
-
-### 通过命令行配置
+运行以下命令，根据提示粘贴 App ID 和 App Secret：
 
 ```bash
-moltbot-cn channels add --channel feishu --app-id "cli_xxx" --app-secret "xxx"
+moltbot-cn channels add
 ```
+
+选择 **Feishu**，然后输入您在第一步获取的凭证即可。
 
 ### 通过配置文件配置
 
