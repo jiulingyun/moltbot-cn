@@ -108,23 +108,9 @@ openclaw-cn channels add
 
 ![启用机器人能力](../images/feishu-step5-bot-capability.png)
 
-### 6. 配置事件订阅
-
-在 **事件订阅** 页面：
-1. 选择 **使用长连接接收事件**（WebSocket 模式）
-2. 添加事件：`im.message.receive_v1`（接收消息）
-
-![配置事件订阅](../images/feishu-step6-event-subscription.png)
-
-### 7. 发布应用
-
-1. 在 **版本管理与发布** 页面创建版本
-2. 提交审核并发布
-3. 等待管理员审批（企业自建应用通常自动通过）
-
 ---
 
-## 第二步：配置 Openclaw
+## 第二步：在OpenClaw中配置飞书渠道
 
 ### 通过向导配置（推荐）
 
@@ -165,17 +151,38 @@ export FEISHU_APP_ID="cli_xxx"
 export FEISHU_APP_SECRET="xxx"
 ```
 
----
-
-## 第三步：启动并测试
-
-### 1. 启动网关
+### 重启网关服务使配置生效：
 
 ```bash
-openclaw-cn gateway
+# 重启openclaw网关服务
+systemctl --user restart openclaw-gateway
+# 查看服务状态，确认是否启动成功
+systemctl --user status openclaw-gateway
+# 实时查看日志输出，确认是否存在飞书渠道启动成功的日志
+journalctl --user -u openclaw-gateway -f
 ```
 
-### 2. 发送测试消息
+---
+
+## 第三步：回到飞书完成机器人事件配置
+
+### 1. 配置事件订阅
+
+在 **事件订阅** 页面：
+1. 选择 **使用长连接接收事件**（WebSocket 模式）
+2. 添加事件：`im.message.receive_v1`（接收消息）
+
+![配置事件订阅](../images/feishu-step6-event-subscription.png)
+
+### 2. 发布应用
+
+1. 在 **版本管理与发布** 页面创建版本
+2. 提交审核并发布
+3. 等待管理员审批（企业自建应用通常自动通过）
+
+## 第四步：测试飞书机器人
+
+### 1. 发送测试消息
 
 在飞书中找到您创建的机器人，发送一条消息。
 
