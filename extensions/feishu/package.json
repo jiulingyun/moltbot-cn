@@ -1,22 +1,12 @@
 {
   "name": "@clawdbot/feishu",
-  "version": "2026.1.31-beta.0",
+  "version": "2026.1.31-beta.1",
   "type": "module",
   "description": "Clawdbot Feishu channel plugin",
   "clawdbot": {
     "extensions": [
       "./index.ts"
-    ],
-    "channel": {
-      "id": "feishu",
-      "label": "Feishu",
-      "blurb": "飞书/Lark 机器人集成 (WebSocket)。",
-      "docsPath": "/channels/feishu"
-    },
-    "install": {
-      "localPath": "extensions/feishu",
-      "defaultChoice": "local"
-    }
+    ]
   },
   "devDependencies": {
     "clawdbot": "workspace:openclaw-cn@*",
