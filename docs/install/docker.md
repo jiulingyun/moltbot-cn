@@ -85,6 +85,91 @@ docker compose run --rm clawdbot-cli onboard
 docker compose up -d clawdbot-gateway
 ```
 
+### 环境变量配置（可选）
+
+Docker 容器支持以下环境变量。您可以通过 `.env` 文件或命令行设置它们：
+
+#### 网关和 CLI 共享的环境变量
+
+| 变量 | 用途 | 必需 | 说明 |
+|------|------|------|------|
+| `CLAUDE_AI_SESSION_KEY` | Claude.ai 会话凭证 | ❌ | 用于使用 Claude AI 作为智能体后端 |
+| `CLAUDE_WEB_SESSION_KEY` | Claude Web 会话凭证 | ❌ | 用于 Claude 网页版集成 |
+| `CLAUDE_WEB_COOKIE` | Claude Web 访问令牌 | ❌ | 用于 Claude 网页版 Cookie 认证 |
+| `OPENCLAW_GATEWAY_TOKEN` | 网关认证令牌 | ❌ | 由 `docker-setup.sh` 自动生成 |
+| `OPENCLAW_GATEWAY_BIND` | 网关绑定地址 | ❌ | 默认：`lan`（局域网）；可设为 `0.0.0.0`（公开）或 `localhost` |
+| `OPENCLAW_GATEWAY_PORT` | 网关监听端口 | ❌ | 默认：`18789` |
+| `OPENCLAW_BRIDGE_PORT` | 桥接端口 | ❌ | 默认：`18790` |
+
+#### 镜像和构建相关变量
+
+| 变量 | 用途 | 说明 |
+|------|------|------|
+| `OPENCLAW_IMAGE` | Docker 镜像名称 | 默认：`openclaw-cn:local`；可设为预构建镜像如 `jiulingyun803/openclaw-cn:latest` |
+| `OPENCLAW_DOCKER_APT_PACKAGES` | 额外的 apt 包 | 在镜像构建期间安装（如 `ffmpeg build-essential`） |
+| `OPENCLAW_EXTRA_MOUNTS` | 额外挂载点 | 逗号分隔的绑定挂载列表（如 `$HOME/.codex:/home/node/.codex:ro`) |
+| `OPENCLAW_HOME_VOLUME` | 命名卷名称 | 用于持久化容器 `/home/node` 目录 |
+
+#### 配置和工作目录
+
+| 变量 | 用途 | 默认值 |
+|------|------|--------|
+| `OPENCLAW_CONFIG_DIR` | 配置目录 | `~/.openclaw` |
+| `OPENCLAW_WORKSPACE_DIR` | 工作区目录 | `~/clawd` |
+
+**设置环境变量的方法：**
+
+**方法 1：使用 `.env` 文件（推荐）**
+
+在项目根目录创建 `.env` 文件：
+
+```bash
+# Claude 集成（可选）
+CLAUDE_AI_SESSION_KEY=your_session_key_here
+CLAUDE_WEB_SESSION_KEY=your_web_session_key_here
+CLAUDE_WEB_COOKIE=your_cookie_here
+
+# 网关配置
+OPENCLAW_GATEWAY_PORT=18789
+OPENCLAW_GATEWAY_BIND=lan
+
+# 镜像配置
+OPENCLAW_IMAGE=jiulingyun803/openclaw-cn:latest
+```
+
+然后运行 Docker Compose 命令时会自动读取这些变量。
+
+**方法 2：直接导出环境变量**
+
+```bash
+export CLAUDE_AI_SESSION_KEY="your_key"
+export OPENCLAW_GATEWAY_PORT="18789"
+docker compose run --rm openclaw-cn-cli pairing list
+```
+
+**方法 3：在命令行指定**
+
+```bash
+docker compose run -e OPENCLAW_GATEWAY_PORT=18789 --rm openclaw-cn-cli status
+```
+
+#### 关于 Claude 环境变量的说明
+
+这三个 Claude 相关变量是**可选的**：
+
+- **何时需要**：如果你要使用 Claude AI 作为网关的智能体后端
+- **何时不需要**：仅使用 Feishu、Telegram 等渠道集成时，可以忽略
+
+如果这些变量未设置，Docker 会输出以下警告（**这是正常的**）：
+
+```
+time="..." level=warning msg="The \"CLAUDE_AI_SESSION_KEY\" variable is not set. Defaulting to a blank string."
+time="..." level=warning msg="The \"CLAUDE_WEB_SESSION_KEY\" variable is not set. Defaulting to a blank string."
+time="..." level=warning msg="The \"CLAUDE_WEB_COOKIE\" variable is not set. Defaulting to a blank string."
+```
+
+**这些警告不会影响渠道功能**，如 Feishu、Telegram、Discord 等。
+
 ### 额外挂载（可选）
 
 如果您想将额外的主机目录挂载到容器中，在运行 `docker-setup.sh` 之前设置
@@ -178,32 +263,94 @@ ENV NODE_ENV=production
 CMD ["node","dist/index.js"]
 ```
 
+### CLI 服务
+
+**服务名称**：`openclaw-cn-cli`
+
+通过 Docker Compose 运行 CLI 命令进行配置、调试和管理：
+
+```bash
+# 查看所有可用命令
+docker compose run --rm openclaw-cn-cli --help
+
+# 交互式配置向导
+docker compose run --rm openclaw-cn-cli onboard
+
+# 查看当前配置
+docker compose run --rm openclaw-cn-cli config get
+
+# 列出待审批的配对请求
+docker compose run --rm openclaw-cn-cli pairing list
+
+# 批准飞书配对请求
+docker compose run --rm openclaw-cn-cli pairing approve feishu <pairing_code>
+```
+
 ### 渠道设置（可选）
 
 使用 CLI 容器配置渠道，然后根据需要重启网关。
 
 WhatsApp（QR）：
 ```bash
-docker compose run --rm clawdbot-cli channels login
+docker compose run --rm openclaw-cn-cli channels login
 ```
 
 Telegram（机器人令牌）：
 ```bash
-docker compose run --rm clawdbot-cli channels add --channel telegram --token "<token>"
+docker compose run --rm openclaw-cn-cli channels add --channel telegram --token "<token>"
 ```
 
 Discord（机器人令牌）：
 ```bash
-docker compose run --rm clawdbot-cli channels add --channel discord --token "<token>"
+docker compose run --rm openclaw-cn-cli channels add --channel discord --token "<token>"
 ```
 
-文档：[WhatsApp](/channels/whatsapp)、[Telegram](/channels/telegram)、[Discord](/channels/discord)
+Feishu（飞书）：
+```bash
+# 使用引导向导设置
+docker compose run --rm openclaw-cn-cli onboard
 
-### 健康检查
+# 或直接配置
+docker compose run --rm openclaw-cn-cli config set channels.feishu.accounts[].appId "<app_id>"
+docker compose run --rm openclaw-cn-cli config set channels.feishu.accounts[].appSecret "<app_secret>"
+```
+
+文档：[WhatsApp](/channels/whatsapp)、[Telegram](/channels/telegram)、[Discord](/channels/discord)、[Feishu](/channels/feishu)
+
+### 健康检查和调试
 
 ```bash
-docker compose exec clawdbot-gateway node dist/index.js health --token "$OPENCLAW_GATEWAY_TOKEN"
+# 检查网关健康状态
+docker compose exec openclaw-cn-gateway node dist/index.js health --token "$OPENCLAW_GATEWAY_TOKEN"
+
+# 查看实时日志
+docker compose logs -f openclaw-cn-gateway
+
+# 查看 CLI 日志
+docker compose logs -f openclaw-cn-cli
+
+# 检查渠道状态
+docker compose run --rm openclaw-cn-cli channels status
+
+# 运行医生诊断
+docker compose run --rm openclaw-cn-cli doctor
 ```
+
+### 常用 CLI 命令参考
+
+| 命令 | 说明 |
+|------|------|
+| `pairing list` | 列出待审批的配对请求 |
+| `pairing approve <channel> <code>` | 批准配对请求 |
+| `config get` | 查看当前配置 |
+| `config set <key> <value>` | 设置配置值 |
+| `config set gateway.controlUi.allowInsecureAuth true` | 允许 Web UI 不安全认证（见下文常见问题） |
+| `channels status` | 查看所有渠道状态 |
+| `channels login` | WhatsApp QR 登录 |
+| `channels add --channel <name> --token <token>` | 添加新渠道 |
+| `doctor` | 运行诊断检查 |
+| `logs` | 查看网关日志 |
+| `dashboard` | 打开控制面板 URL |
 
 ### E2E 冒烟测试（Docker）
 
@@ -217,10 +364,20 @@ scripts/e2e/onboard-docker.sh
 pnpm test:docker:qr
 ```
 
+### 容器服务说明
+
+本项目提供两个主要的 Docker Compose 服务：
+
+| 服务 | 用途 | 命令 |
+|------|------|------|
+| `openclaw-cn-gateway` | 后台网关服务（持续运行） | `docker compose up -d openclaw-cn-gateway` |
+| `openclaw-cn-cli` | 交互式 CLI 工具（一次性命令） | `docker compose run --rm openclaw-cn-cli <command>` |
+
 ### 注意
 
 - 网关绑定默认为 `lan` 用于容器使用。
 - 网关容器是会话的权威来源（`~/.openclaw/agents/<agentId>/sessions/`）。
+- CLI 容器与网关共享配置目录（`~/.openclaw`），任何通过 CLI 进行的配置更改都会立即在网关中生效。
 
 ## 代理沙箱（主机网关 + Docker 工具）
 
@@ -620,6 +777,86 @@ docker ps
 - 硬墙仅适用于 **工具**（exec/read/write/edit/apply_patch）。
 - 仅主机工具如 browser/camera/canvas 默认被阻止。
 - 在沙箱中允许 `browser` **会破坏隔离**（浏览器在主机上运行）。
+
+## 常见问题（FAQ）
+
+### Web UI 显示 "disconnected (1008): pairing required" 错误
+
+#### 问题表现
+
+在浏览器中访问 Web UI（`http://127.0.0.1:18789/?token=...`）时，收到错误：
+
+```
+disconnected (1008): pairing required
+```
+
+同时 Feishu、Telegram 等渠道能正常工作，表明网关运行正常。
+
+#### 原因
+
+Docker 中的 Web UI 连接采用不同的认证路径：
+
+- **本地 npm 模式**：浏览器连接被识别为真正的本地连接 → 自动允许，跳过配对检查
+- **Docker 模式**：即使是 127.0.0.1 的浏览器连接也被视为网络连接 → 需要显式配置允许 Web UI 不安全认证
+
+这是因为 WebSocket 连接经过容器网络栈的处理，因此需要 `gateway.controlUi.allowInsecureAuth` 配置项来告诉网关允许基于令牌的 Web UI 认证。
+
+#### 解决方案
+
+启用 Web UI 不安全认证配置：
+
+```bash
+# 执行一次性配置命令
+docker compose run --rm openclaw-cn-cli config set gateway.controlUi.allowInsecureAuth true
+
+# 重启网关使配置生效
+docker compose restart openclaw-cn-gateway
+
+# 等待几秒钟，然后在浏览器中重新打开 Web UI
+```
+
+验证配置已保存：
+
+```bash
+cat ~/.openclaw/openclaw.json | grep -A 2 controlUi
+```
+
+应该看到：
+
+```json
+"controlUi": {
+  "allowInsecureAuth": true
+},
+```
+
+#### 为什么这很安全？
+
+- `gateway.bind=loopback` 限制了网关只在本地访问
+- 即使启用 `allowInsecureAuth`，仍然需要有效的网关令牌（`OPENCLAW_GATEWAY_TOKEN`）
+- 令牌由 `docker-setup.sh` 自动生成并安全存储
+
+#### 如果仍然不工作？
+
+1. **检查令牌**
+   ```bash
+   # 获取令牌
+   cat ~/.openclaw/openclaw.json | grep -A 1 '"auth"'
+   
+   # 验证 Web UI URL 中包含正确的令牌
+   # 格式: http://127.0.0.1:18789/?token=<token>
+   ```
+
+2. **查看网关日志**
+   ```bash
+   docker compose logs -f openclaw-cn-gateway | grep -i "control ui\|pairing"
+   ```
+
+3. **重新启动网关**
+   ```bash
+   docker compose restart openclaw-cn-gateway
+   sleep 3
+   docker compose logs openclaw-cn-gateway | tail -20
+   ```
 
 ## 故障排除
 
