@@ -98,69 +98,21 @@ openclaw-cn models status
 disconnected (1008): pairing required
 ```
 
-#### 原因
+这个错误通常出现在 **容器化部署**（Docker、Kubernetes）中。
 
-这个错误发生在 **容器化部署**（Docker/Kubernetes）中，原因是：
+**详细说明和解决方案：** 见 [配对要求故障排除](/gateway/pairing-required-troubleshooting)
 
-- **本地直接运行**：浏览器连接被识别为真正的本地连接 → 自动允许，跳过配对
-- **容器部署**：即使是 `127.0.0.1` 的浏览器连接也经过容器网络栈 → 被视为网络连接，触发严格的设备配对检查
-
-WebSocket 连接被视为网络连接时，网关需要 `gateway.controlUi.allowInsecureAuth` 配置来允许基于令牌的 Web UI 认证。
-
-#### 修复方案
-
-启用 Web UI 不安全认证配置：
-
-**方案 1：CLI 配置（推荐）**
+**快速修复（Docker）：**
 ```bash
-# 设置配置
-openclaw-cn config set gateway.controlUi.allowInsecureAuth true
-
-# 重启网关
-openclaw-cn gateway restart
-```
-
-**方案 2：编辑配置文件**
-```bash
-# 编辑 ~/.openclaw/openclaw.json
-# 在 gateway 节点下添加：
-"controlUi": {
-  "allowInsecureAuth": true
-}
-
-# 然后重启网关
-openclaw-cn gateway restart
-```
-
-**方案 3：Docker 部署**
-```bash
-# 如果使用 Docker Compose
 docker compose run --rm openclaw-cn-cli config set gateway.controlUi.allowInsecureAuth true
 docker compose restart openclaw-cn-gateway
 ```
 
-#### 验证配置
-
-确认配置已正确保存：
-
+**快速修复（本地）：**
 ```bash
-openclaw-cn config get gateway.controlUi.allowInsecureAuth
+openclaw-cn config set gateway.controlUi.allowInsecureAuth true
+openclaw-cn gateway restart
 ```
-
-应该返回 `true`。
-
-#### 为什么这很安全？
-
-- `gateway.bind=loopback` 或网络隔离限制了网关访问范围
-- 即使启用 `allowInsecureAuth`，仍然需要有效的网关令牌或密码
-- 令牌存储在 `~/.openclaw/openclaw.json` 中，不会在日志中暴露
-- 来自未认证用户的请求仍然会被拒绝
-
-#### 相关文档
-
-- [控制 UI](/web/control-ui)
-- [设备配对](/gateway/pairing)
-- [令牌不匹配](/gateway/token-mismatch-troubleshooting)
 
 ### CI Secrets Scan 失败
 
